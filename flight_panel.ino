@@ -2,21 +2,48 @@
 #include <Joystick.h>
 #include <SimpleRotary.h>
 
-const uint8_t rown = 1; //4 rows
-const uint8_t coln = 2; //3 columns
-uint8_t rowPins[rown] = {4}; 
-uint8_t colPins[coln] = {2, 3};
-char keymap[rown][coln] = 
-  {{2,3,}};
+/** 
+ Fireswitch setup 
+ It isn't part of the matrix as it is bipositional essentially closing one row and column 
+ making all other buttons on that useless.
+**/
+const uint8_t fs_pin = 8;
+const uint8_t fs_poll_freq = 200;
+int fs_state = 0;
+unsigned long fs_lastScan = 0;
+
+/** Keypad setup **/
+const uint8_t rown = 4; 
+const uint8_t coln = 4;
+const uint8_t rowPins[rown] = {0,1,2,3}; 
+const uint8_t colPins[coln] = {4,5,6,7};
+
+const char keymap[rown][coln] = // keymap matrix mapping to joystick buttons
+  {
+    {4, 5, 6, 7},
+    {8, 9, 10, 11},
+    {12, 13, 14, 15},
+    {16, 'u', 'u', 'u'}, // unnused
+  };
 
 MatrixKeypad_t *keypad;
+unsigned long lastScan;
+char prev_key;
 
-SimpleRotary rotary(0,1,8);
+/** Rotary setup **/
+SimpleRotary rotary1(10, // first spin pin
+                    11, // second spin pin
+                    14  // push button pin
+             );
+SimpleRotary rotary2(12, // first spin pin
+                    13, // second spin pin
+                    14  // push button pin
+);
 
-//JOYSTICK SETTINGS
+/** Joystick settings **/
 Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,
   JOYSTICK_TYPE_JOYSTICK,
-  4, //number of buttons
+  18, //number of buttons + number of rotaries * 2
   0, //number of hat switches
   //Set as many axis to "true" as you have potentiometers for
   false, // y axis
@@ -34,40 +61,55 @@ Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,
 void setup(){
   Serial.begin(9600);
   Joystick.begin();
-  keypad = MatrixKeypad_create((char*)keymap /* don't forget to do this cast */, rowPins, colPins, rown, coln); //creates the keypad object
+  keypad = MatrixKeypad_create((char*)keymap, rowPins, colPins, rown, coln);
+  pinMode(fs_pin, INPUT);
 }
 
 void loop(){
-  process_rotary();
   process_keys();
-}
-
-void process_rotary() {
-  byte i;
-  i = rotary.rotate();
-  
-  // CW
-  if ( i == 1 ) {
-    Serial.println("CW");
-    button_click(0);
-  }
-  
-  // CCW
-  if ( i == 2 ) {
-    Serial.println("CCW");
-    button_click(1);
-  }
+  process_fire_switch();
+  process_rotary(rotary1, 0, 1);
+  process_rotary(rotary2, 2, 3);
 }
 
 void process_keys() {
-  MatrixKeypad_scan(keypad); //scans for a key press event
-  if(MatrixKeypad_hasKey(keypad)){ //if a key was pressed
-    char key = MatrixKeypad_getKey(keypad); //get the key
-    Serial.println(key, DEC); //prints the pressed key to the serial output
-    button_click(key);
+  MatrixKeypad_scan(keypad);
+  if(MatrixKeypad_hasKey(keypad)){
+    char key = MatrixKeypad_getKey(keypad);
+    if(key != prev_key || millis() - lastScan >= 200) { // simple debouncing
+      button_click(key);
+      lastScan = millis();
+      prev_key = key;
+    }
+  }
+}
+
+void process_fire_switch() {
+  if(millis() - fs_lastScan >= fs_poll_freq) {
+    fs_lastScan = millis();
+    int state = digitalRead(fs_pin);
+    if (state != fs_state) {
+      Serial.println(state);
+      fs_state = state;
+      button_click(17);
+    }
+  }
+}
+
+void process_rotary(SimpleRotary rotary,uint8_t cw, uint8_t ccw) {
+  byte i;
+  i = rotary.rotate();
+  
+  if ( i == 1 ) {
+    button_click(cw);
+  }
+  
+  if ( i == 2 ) {
+    button_click(ccw);
   }
 }
 
 void button_click(int button_num){
   Joystick.setButton(button_num, 1); delay(50); Joystick.setButton(button_num, 0);
+  Serial.println(button_num, DEC);
 }
