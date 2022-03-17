@@ -8,7 +8,7 @@
  making all other buttons on that useless.
 **/
 const uint8_t fs_pin = 8;
-const uint8_t fs_poll_freq = 200;
+const uint8_t fs_poll_freq = 1000; // ms
 int fs_state = 0;
 unsigned long fs_lastScan = 0;
 
@@ -17,6 +17,8 @@ const uint8_t rown = 4;
 const uint8_t coln = 4;
 const uint8_t rowPins[rown] = {0,1,2,3}; 
 const uint8_t colPins[coln] = {4,5,6,7};
+const uint8_t key_scan_freq = 50; // ms
+const uint8_t key_repeat_timeout = 200; // ms, how long before registering same key being pressed
 
 const char keymap[rown][coln] = // keymap matrix mapping to joystick buttons
   {
@@ -28,6 +30,7 @@ const char keymap[rown][coln] = // keymap matrix mapping to joystick buttons
 
 MatrixKeypad_t *keypad;
 unsigned long lastScan;
+unsigned long lastKeyPress;
 char prev_key;
 
 /** Rotary setup **/
@@ -62,7 +65,7 @@ void setup(){
   Serial.begin(9600);
   Joystick.begin();
   keypad = MatrixKeypad_create((char*)keymap, rowPins, colPins, rown, coln);
-  pinMode(fs_pin, INPUT);
+  pinMode(fs_pin, INPUT_PULLUP);
 }
 
 void loop(){
@@ -73,13 +76,17 @@ void loop(){
 }
 
 void process_keys() {
-  MatrixKeypad_scan(keypad);
-  if(MatrixKeypad_hasKey(keypad)){
-    char key = MatrixKeypad_getKey(keypad);
-    if(key != prev_key || millis() - lastScan >= 200) { // simple debouncing
-      button_click(key);
-      lastScan = millis();
-      prev_key = key;
+  if(millis() - lastScan >= key_scan_freq) {
+    lastScan = millis();
+    MatrixKeypad_scan(keypad);
+    
+    if(MatrixKeypad_hasKey(keypad)){
+      char key = MatrixKeypad_getKey(keypad);
+      if(key != prev_key || millis() - lastKeyPress >= key_repeat_timeout) {
+        button_click(key);
+        lastKeyPress = millis();
+        prev_key = key;
+      }
     }
   }
 }
@@ -96,7 +103,7 @@ void process_fire_switch() {
   }
 }
 
-void process_rotary(SimpleRotary rotary,uint8_t cw, uint8_t ccw) {
+void process_rotary(SimpleRotary &rotary, uint8_t cw, uint8_t ccw) {
   byte i;
   i = rotary.rotate();
   
