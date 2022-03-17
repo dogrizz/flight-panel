@@ -8,7 +8,7 @@
  making all other buttons on that useless.
 **/
 const uint8_t fs_pin = 8;
-const uint8_t fs_poll_freq = 1000; // ms
+const int fs_poll_freq = 1000; // ms
 int fs_state = 0;
 unsigned long fs_lastScan = 0;
 
