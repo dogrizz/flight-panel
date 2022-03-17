@@ -36,11 +36,11 @@ char prev_key;
 /** Rotary setup **/
 SimpleRotary rotary1(10, // first spin pin
                     11, // second spin pin
-                    14  // push button pin
-             );
+                    14  // push button pin - not processed
+);
 SimpleRotary rotary2(12, // first spin pin
                     13, // second spin pin
-                    14  // push button pin
+                    14  // push button pin - not processed
 );
 
 /** Joystick settings **/
@@ -95,8 +95,7 @@ void process_fire_switch() {
   if(millis() - fs_lastScan >= fs_poll_freq) {
     fs_lastScan = millis();
     int state = digitalRead(fs_pin);
-    if (state != fs_state) {
-      Serial.println(state);
+    if (state != fs_state) { 
       fs_state = state;
       button_click(17);
     }
