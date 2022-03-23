@@ -47,7 +47,7 @@ SimpleRotary rotary2(12, // first spin pin
 /** Joystick settings **/
 Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,
   JOYSTICK_TYPE_JOYSTICK,
-  18, //number of buttons + number of rotaries * 2
+  21, //number of buttons + number of rotaries * 2
   0, //number of hat switches
   //Set as many axis to "true" as you have potentiometers for
   false, // y axis
