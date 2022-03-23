@@ -8,9 +8,10 @@
  making all other buttons on that useless.
 **/
 const uint8_t fs_pin = 8;
-const int fs_poll_freq = 1000; // ms
+const int fs_poll_freq = 500; // ms
 int fs_state = 0;
 unsigned long fs_lastScan = 0;
+const int fs_button = 20;
 
 /** Keypad setup **/
 const uint8_t rown = 4; 
@@ -25,7 +26,7 @@ const char keymap[rown][coln] = // keymap matrix mapping to joystick buttons
     {4, 5, 6, 7},
     {8, 9, 10, 11},
     {12, 13, 14, 15},
-    {16, 'u', 'u', 'u'}, // unnused
+    {16, 17, 18, 19}, // unnused
   };
 
 MatrixKeypad_t *keypad;
@@ -97,7 +98,7 @@ void process_fire_switch() {
     int state = digitalRead(fs_pin);
     if (state != fs_state) { 
       fs_state = state;
-      button_click(17);
+      button_click(fs_button);
     }
   }
 }
