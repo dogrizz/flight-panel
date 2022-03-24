@@ -7,8 +7,9 @@
  It isn't part of the matrix as it is bipositional essentially closing one row and column 
  making all other buttons on that useless.
 **/
-const uint8_t fs_pin = 8;
-const int fs_poll_freq = 500; // ms
+const uint8_t fs_current_pin = 8;
+const uint8_t fs_read_pin = 9;
+const int fs_poll_freq = 250; // ms
 int fs_state = 0;
 unsigned long fs_lastScan = 0;
 const int fs_button = 20;
@@ -66,10 +67,12 @@ void setup(){
   Serial.begin(9600);
   Joystick.begin();
   keypad = MatrixKeypad_create((char*)keymap, rowPins, colPins, rown, coln);
-  pinMode(fs_pin, INPUT_PULLUP);
+  pinMode(fs_current_pin, OUTPUT);
+  pinMode(fs_read_pin, INPUT);
 }
 
 void loop(){
+  digitalWrite(fs_current_pin, HIGH);
   process_keys();
   process_fire_switch();
   process_rotary(rotary1, 0, 1);
@@ -95,8 +98,8 @@ void process_keys() {
 void process_fire_switch() {
   if(millis() - fs_lastScan >= fs_poll_freq) {
     fs_lastScan = millis();
-    int state = digitalRead(fs_pin);
-    if (state != fs_state) { 
+    int state = digitalRead(fs_read_pin);
+    if (state != fs_state) {
       fs_state = state;
       button_click(fs_button);
     }
@@ -120,3 +123,4 @@ void button_click(int button_num){
   Joystick.setButton(button_num, 1); delay(50); Joystick.setButton(button_num, 0);
   Serial.println(button_num, DEC);
 }
+
