@@ -16,3 +16,10 @@ Panel is supposed to fit inside Thrustmaster Flying Clamp
  - SPDT 3P on-(on) momentary switch (use 2,3 connectors)
  - EC16 encoders
  - Adafruit 3219 for the Master Switch ;)
+### Adafruit connection
+To get light only when turned on:
+fs_current_pin to +
+fs_input_pin to =D
+ground to ground :)
+
+If you want light always on switch current and input pins
