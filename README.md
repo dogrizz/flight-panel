@@ -21,5 +21,3 @@ To get light only when turned on:
  - fs_current_pin to +
  - fs_input_pin to =D
  - ground to ground :)
-
-If you want light always on switch current and input pins
